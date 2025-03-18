@@ -3,6 +3,7 @@ from crewai import Crew
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import json
+import traceback
 
 from config import Config
 from agents.filtering_agent import FilteringAgent
@@ -19,21 +20,33 @@ config = Config.from_env()
 
 def initialize_llm():
     """Initialize the language model."""
-    return ChatGroq(model=config.llm_model, api_key=config.llm_api_key)
+    try:
+        return ChatGroq(model=config.llm_model, api_key=config.llm_api_key)
+    except Exception as e:
+        st.error(f"Error initializing LLM: {str(e)}")
+        raise
 
 def initialize_agents(llm):
     """Initialize all the agents."""
-    filtering_agent = FilteringAgent.create_default(llm)
-    extraction_agent = TaskExtractionAgent.create_default(llm)
-    formatting_agent = TaskFormattingAgent.create_default(llm)
-    return filtering_agent, extraction_agent, formatting_agent
+    try:
+        filtering_agent = FilteringAgent.create_default(llm)
+        extraction_agent = TaskExtractionAgent.create_default(llm)
+        formatting_agent = TaskFormattingAgent.create_default(llm)
+        return filtering_agent, extraction_agent, formatting_agent
+    except Exception as e:
+        st.error(f"Error initializing agents: {str(e)}")
+        raise
 
 def initialize_tasks(filtering_agent, extraction_agent, formatting_agent):
     """Initialize all tasks."""
-    filtering_task = FilteringTask(filtering_agent)
-    extraction_task = ExtractionTask(extraction_agent, depends_on=[filtering_task])
-    formatting_task = FormattingTask(formatting_agent, depends_on=[extraction_task])
-    return filtering_task, extraction_task, formatting_task
+    try:
+        filtering_task = FilteringTask(filtering_agent)
+        extraction_task = ExtractionTask(extraction_agent, depends_on=[filtering_task])
+        formatting_task = FormattingTask(formatting_agent, depends_on=[extraction_task])
+        return filtering_task, extraction_task, formatting_task
+    except Exception as e:
+        st.error(f"Error initializing tasks: {str(e)}")
+        raise
 
 def process_messages(messages, agents, tasks):
     """Process messages through the agent workflow."""
@@ -47,9 +60,15 @@ def process_messages(messages, agents, tasks):
         process=config.process_type
     )
     
-    result = crew.kickoff(inputs={"messages": messages})
-    # Convert CrewOutput to string to ensure it can be parsed as JSON
-    return str(result)
+    try:
+        result = crew.kickoff(inputs={"messages": messages})
+        # Convert CrewOutput to string to ensure it can be parsed as JSON
+        return str(result)
+    except Exception as e:
+        # Get detailed stack trace
+        stack_trace = traceback.format_exc()
+        st.error(f"API Error: {str(e)}\n\n{stack_trace}")
+        return None
 
 def main():
     st.title("TaskFlow Agent")
@@ -65,13 +84,21 @@ def main():
         use_enhanced_extraction = st.checkbox("Use Enhanced Extraction", value=True)
     
     # Initialize components
-    llm = initialize_llm()
-    agents = initialize_agents(llm)
-    tasks = initialize_tasks(*agents)
+    try:
+        llm = initialize_llm()
+        agents = initialize_agents(llm)
+        tasks = initialize_tasks(*agents)
+    except Exception:
+        st.error("Initialization failed. Please check your API keys and configuration.")
+        return
     
     # Load and display messages
-    slack_processor = SlackMessageProcessor()
-    messages = slack_processor.load_messages_from_file(channel)
+    try:
+        slack_processor = SlackMessageProcessor()
+        messages = slack_processor.load_messages_from_file(channel)
+    except Exception as e:
+        st.error(f"Error loading messages: {str(e)}")
+        return
     
     if messages:
         st.write(f"Found {len(messages)} messages in #{channel}")
@@ -86,6 +113,10 @@ def main():
             with st.spinner("Processing messages..."):
                 result = process_messages(messages, agents, tasks)
                 
+                if not result:
+                    # Error was already displayed in process_messages
+                    return
+                    
                 try:
                     # Display the result in a formatted way
                     tasks = json.loads(result)
@@ -129,27 +160,30 @@ def main():
                     st.subheader("Export Tasks")
                     export_option = st.selectbox("Export to:", ["JSON File", "Trello", "ClickUp"])
                     if st.button("Export"):
-                        if export_option == "JSON File":
-                            from integrations.task_exporter import FileExporter
-                            exporter = FileExporter()
-                        elif export_option == "Trello":
-                            from integrations.task_exporter import TrelloExporter
-                            exporter = TrelloExporter()
-                        else:  # ClickUp
-                            from integrations.task_exporter import ClickUpExporter
-                            exporter = ClickUpExporter()
-                            
-                        success = exporter.export_tasks(tasks)
-                        if success:
-                            st.success(f"Successfully exported tasks to {export_option}")
-                        else:
-                            st.error(f"Failed to export tasks to {export_option}")
+                        try:
+                            if export_option == "JSON File":
+                                from integrations.task_exporter import FileExporter
+                                exporter = FileExporter()
+                            elif export_option == "Trello":
+                                from integrations.task_exporter import TrelloExporter
+                                exporter = TrelloExporter()
+                            else:  # ClickUp
+                                from integrations.task_exporter import ClickUpExporter
+                                exporter = ClickUpExporter()
+                                
+                            success = exporter.export_tasks(tasks)
+                            if success:
+                                st.success(f"Successfully exported tasks to {export_option}")
+                            else:
+                                st.error(f"Failed to export tasks to {export_option}")
+                        except Exception as e:
+                            st.error(f"Export error: {str(e)}")
                         
                 except json.JSONDecodeError:
                     st.error("Could not parse the extracted tasks. Raw output:")
                     st.code(result)
                 except Exception as e:
-                    st.error(f"An error occurred: {str(e)}")
+                    st.error(f"Error processing tasks: {str(e)}")
     else:
         st.warning(f"No messages found in #{channel}. Please select a different channel.")
 

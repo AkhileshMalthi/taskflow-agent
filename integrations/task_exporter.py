@@ -19,11 +19,18 @@ class TrelloExporter(TaskExporter):
         self.token = token or os.getenv("TRELLO_API_TOKEN")
         self.board_id = board_id or os.getenv("TRELLO_BOARD_ID")
         
+        if not self.api_key or not self.token:
+            raise ValueError("Trello API key and token are required. Set TRELLO_API_KEY and TRELLO_API_TOKEN environment variables.")
+        
     def export_tasks(self, tasks: List[Dict[str, Any]]) -> bool:
         """Export tasks to Trello."""
-        # Implementation would go here using the Trello API
-        print(f"Exporting {len(tasks)} tasks to Trello")
-        return True
+        try:
+            # Implementation would go here using the Trello API
+            print(f"Exporting {len(tasks)} tasks to Trello")
+            return True
+        except Exception as e:
+            print(f"Error exporting to Trello: {str(e)}")
+            raise
 
 class ClickUpExporter(TaskExporter):
     """Export tasks to ClickUp."""
@@ -32,18 +39,28 @@ class ClickUpExporter(TaskExporter):
         self.api_token = api_token or os.getenv("CLICKUP_API_TOKEN")
         self.list_id = list_id or os.getenv("CLICKUP_LIST_ID")
         
+        if not self.api_token:
+            raise ValueError("ClickUp API token is required. Set CLICKUP_API_TOKEN environment variable.")
+        
     def export_tasks(self, tasks: List[Dict[str, Any]]) -> bool:
         """Export tasks to ClickUp."""
-        # Implementation would go here using the ClickUp API
-        print(f"Exporting {len(tasks)} tasks to ClickUp")
-        return True
+        try:
+            # Implementation would go here using the ClickUp API
+            print(f"Exporting {len(tasks)} tasks to ClickUp")
+            return True
+        except Exception as e:
+            print(f"Error exporting to ClickUp: {str(e)}")
+            raise
 
 class FileExporter(TaskExporter):
     """Export tasks to a JSON file."""
     
     def __init__(self, output_dir: str = "d:\\Projects\\taskflow-agent\\output"):
         self.output_dir = output_dir
-        os.makedirs(output_dir, exist_ok=True)
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+        except Exception as e:
+            raise ValueError(f"Could not create output directory: {str(e)}")
         
     def export_tasks(self, tasks: List[Dict[str, Any]]) -> bool:
         """Export tasks to a JSON file."""
@@ -56,7 +73,7 @@ class FileExporter(TaskExporter):
             return True
         except Exception as e:
             print(f"Error exporting tasks: {str(e)}")
-            return False
+            raise
             
     def _get_timestamp(self) -> str:
         """Get a timestamp string for the filename."""
