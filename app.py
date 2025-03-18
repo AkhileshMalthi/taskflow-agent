@@ -4,6 +4,7 @@ from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import json
 import traceback
+import os
 
 from config import Config
 from agents.filtering_agent import FilteringAgent
@@ -162,13 +163,27 @@ def handle_export(tasks):
         except Exception as e:
             st.error(f"Export error: {str(e)}")
 
+def get_available_channels():
+    """Get a list of available channels from the data directory."""
+    try:
+        data_dir = "d:\\Projects\\taskflow-agent\\data"
+        # List all directories in the data folder, which represent channels
+        channels = [f for f in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, f))]
+        return channels if channels else ["general"]  # Return at least "general" if no channels found
+    except Exception as e:
+        st.sidebar.warning(f"Error loading channels: {str(e)}")
+        return ["general"]  # Fallback to general
+
 def main():
     st.title("TaskFlow Agent")
     st.write("Extract tasks from Slack conversations")
     
     # Sidebar for settings
     st.sidebar.header("Settings")
-    channel = st.sidebar.selectbox("Select Channel", ["general", "social", "all-networking-app", "frontend"])
+    
+    # Dynamically load available channels from data directory
+    available_channels = get_available_channels()
+    channel = st.sidebar.selectbox("Select Channel", available_channels)
     
     # Advanced options
     with st.sidebar.expander("Advanced Options"):
