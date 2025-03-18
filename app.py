@@ -209,7 +209,7 @@ def main():
         if clear_clicked:
             st.session_state.processed_tasks = None
             st.session_state.raw_result = None
-            st.experimental_rerun()
+            st.rerun()  # Use st.rerun() instead of st.experimental_rerun()
         
         if extract_clicked:
             with st.spinner("Processing messages..."):
