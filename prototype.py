@@ -3,19 +3,17 @@ from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import os
 
+from agents import FilteringAgent, TaskExtractionAgent, TaskFormattingAgent
+
 # Load environment variables
 load_dotenv()
 
 # Load LLM using API key from environment
 llm = ChatGroq(model="groq/mixtral-8x7b-32768", api_key=os.getenv("GROQ_API_KEY"))
 
-# 1️⃣ Conversation Filtering Agent
-filtering_agent = Agent(
-    role="Task Filter",
-    goal="Identify messages that contain task-related information.",
-    backstory="You are an AI that filters Slack messages, keeping only those related to task assignments, deadlines, or work requests.",
-    llm=llm
-)
+filtering_agent = FilteringAgent.create_default(llm)
+extraction_agent = TaskExtractionAgent.create_default(llm)
+formatting_agent = TaskFormattingAgent.create_default(llm)
 
 filtering_task = Task(
     description="""
@@ -34,13 +32,6 @@ filtering_task = Task(
     agent=filtering_agent
 )
 
-# 2️⃣ Task Extraction Agent
-extraction_agent = Agent(
-    role="Task Extractor",
-    goal="Extract specific task details from messages.",
-    backstory="You analyze task-related messages and extract structured information about what needs to be done, by whom, and by when.",
-    llm=llm
-)
 
 extraction_task = Task(
     description="""
@@ -55,14 +46,6 @@ extraction_task = Task(
     expected_output="A list of structured task objects with title, assignee, and deadline fields.",
     agent=extraction_agent,
     depends_on=[filtering_task]
-)
-
-# 3️⃣ Task Formatting Agent
-formatting_agent = Agent(
-    role="Task Formatter",
-    goal="Format extracted tasks into a standard JSON format.",
-    backstory="You transform raw task data into properly formatted JSON that can be imported into task management systems.",
-    llm=llm
 )
 
 formatting_task = Task(
