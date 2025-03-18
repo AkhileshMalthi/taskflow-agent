@@ -1,0 +1,21 @@
+[project]
+name = "taskflow-agent"
+version = "0.1.0"
+description = "Automate task creation based on the conversations"
+authors = [
+    {name = "Akhilesh Malhti",email = "akhileshmalthi2299@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "crewai (>=0.108.0,<0.109.0)",
+    "langchain (>=0.3.20,<0.4.0)",
+    "langchain-groq (>=0.2.5,<0.3.0)",
+    "streamlit (>=1.43.2,<2.0.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
