@@ -1,10 +1,15 @@
+import os
+import json
+import traceback
 import streamlit as st
+
+# Configure environment to avoid dependency issues
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Now import crewai components
 from crewai import Crew
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
-import json
-import traceback
-import os
 
 from config import Config
 from agents.filtering_agent import FilteringAgent
