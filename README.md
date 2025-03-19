@@ -1,17 +1,18 @@
 # TaskFlow Agent
 
-TaskFlow Agent is an AI-powered tool that automatically extracts and manages tasks from conversations. It listens to discussions in Slack, identifies task-related messages, and can export them to popular task management platforms like Trello and ClickUp.
+TaskFlow Agent is an AI-powered tool that automatically extracts and manages tasks from conversations. It analyzes Slack conversations, identifies task-related messages, and can export them to popular task management platforms like Trello and ClickUp.
 
 ## Features
 
 - **Automatic Task Extraction**: Identifies task assignments, deadlines, and responsibilities in conversations
 - **Intelligent Parsing**: Extracts key task details including title, description, assignee, due date, and priority
 - **Multiple Integrations**:
-  - **Slack**: Processes messages from Slack channels or exported conversation data
+  - **Slack**: Processes messages from Slack exported conversation data (JSON format)
   - **Trello**: Exports tasks as cards with appropriate labels and details
   - **ClickUp**: Creates tasks with priorities, descriptions, and deadlines
 - **Flexible Export Options**: Save tasks as JSON or send directly to task management platforms
 - **Interactive UI**: Built with Streamlit for easy configuration and visualization
+- **File Management**: Save and reload conversation files for future analysis
 
 ## Quick Start
 
@@ -33,10 +34,17 @@ TaskFlow Agent is an AI-powered tool that automatically extracts and manages tas
    Create a `.env` file with your API keys:
    ```
    GROQ_API_KEY=your_groq_api_key
+   LLM_MODEL=groq/mixtral-8x7b-32768
    TRELLO_API_KEY=your_trello_api_key
    TRELLO_API_TOKEN=your_trello_token
+   TRELLO_BOARD_ID=your_trello_board_id
+   TRELLO_LIST_ID=your_trello_list_id
    CLICKUP_API_TOKEN=your_clickup_token
+   CLICKUP_LIST_ID=your_clickup_list_id
+   CLICKUP_SPACE_ID=your_clickup_space_id
    ```
+
+   Alternatively, you can configure these through the UI after launching the application.
 
 3. **Run the Application**:
    ```bash
@@ -45,13 +53,22 @@ TaskFlow Agent is an AI-powered tool that automatically extracts and manages tas
 
 ## How It Works
 
-TaskFlow Agent uses a series of AI agents, each specializing in a specific part of the task extraction process:
+TaskFlow Agent uses a series of AI agents powered by CrewAI, each specializing in a specific part of the task extraction process:
 
 1. **Filtering Agent**: Identifies which messages contain task-related information
 2. **Extraction Agent**: Extracts structured task data from the filtered messages
 3. **Formatting Agent**: Formats the extracted tasks into a standardized JSON structure
 
 These agents work in sequence, passing information to each other through a process orchestrated by CrewAI.
+
+## User Interface
+
+The Streamlit-based UI provides:
+- File upload for Slack conversation JSON files
+- Saved file management (save, load, delete)
+- Configuration interface for API credentials
+- Task extraction and visualization
+- Export options to different platforms
 
 ## Data Format
 
@@ -76,7 +93,10 @@ Tasks are extracted in the following format:
 - `tasks/`: Task definitions that provide instructions to the agents
 - `integrations/`: Integration code for Slack, Trello, and ClickUp
 - `prompts/`: Templates for agent instructions
-- `utils/`: Utility functions for logging and data handling
+- `utils/`: Utility functions including configuration management
+- `data/`: Directory for saved conversation files
+- `app.py`: Main Streamlit application
+- `config.py`: Configuration class for environment variables
 
 ## Requirements
 
@@ -85,6 +105,7 @@ Tasks are extracted in the following format:
 - LangChain
 - Groq API Access
 - Streamlit
+- Requests (for API integrations)
 
 ## Contributing
 
