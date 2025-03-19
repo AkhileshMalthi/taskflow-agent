@@ -57,8 +57,14 @@
 # font = "sans serif"
 
 [theme]
-primaryColor = "#00BFA5"
-backgroundColor = "#1E1E1E"
-secondaryBackgroundColor = "#2C2C2C"
-textColor = "#E0F7FA"
-# font = "monospace" #used monospace to get a similar effect.
+primaryColor = "#6633FF"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+
+[server]
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false

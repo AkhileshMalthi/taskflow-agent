@@ -8,12 +8,13 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
-    "crewai (>=0.108.0,<0.109.0)",
-    "langchain (>=0.3.20,<0.4.0)",
-    "langchain-groq (>=0.2.5,<0.3.0)",
-    "langchain-core (>=0.1.27,<0.2.0)",
-    "streamlit (>=1.43.2,<2.0.0)",
-    "python-dotenv (>=1.0.1,<2.0.0)"
+    "crewai>=0.108.0",
+    "langchain>=0.3.20",
+    "langchain-groq>=0.2.5",
+    "langchain-core>=0.3.42",
+    "streamlit>=1.43.2",
+    "python-dotenv>=1.0.1",
+    "requests>=2.31.0"
 ]
 
 [build-system]
