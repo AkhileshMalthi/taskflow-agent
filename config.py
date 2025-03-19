@@ -32,6 +32,7 @@ class Config:
     def from_env(cls):
         """Load configuration from environment variables."""
         return cls(
+            llm_model=os.getenv("LLM_MODEL", "groq/mixtral-8x7b-32768"),
             llm_api_key=os.getenv("GROQ_API_KEY"),
             slack_api_token=os.getenv("SLACK_API_TOKEN"),
             

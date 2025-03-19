@@ -65,16 +65,20 @@ class SlackMessageProcessor:
             # Process the messages
             processed_messages = []
             for msg in messages_data:
-                if isinstance(msg, dict) and 'text' in msg and 'user' in msg:
-                    # Basic validation that this is a message object
-                    username = msg.get('user_profile', {}).get('real_name', 
-                               msg.get('username', f"User_{msg.get('user', 'unknown')}"))
+                if isinstance(msg, dict) and 'text' in msg:
+                    # Extract username
+                    if 'user_profile' in msg and 'real_name' in msg['user_profile']:
+                        # Use the real name from user profile
+                        username = msg['user_profile']['real_name']
+                    else:
+                        # Fall back to username or user ID
+                        username = msg.get('username', msg.get('user', 'Unknown User'))
                     
                     processed_messages.append({
                         'username': username,
                         'message': msg.get('text', ''),
                         'timestamp': msg.get('ts', ''),
-                        'channel': msg.get('channel', 'uploaded_file')
+                        'user_profile': msg.get('user_profile', {})
                     })
             
             return processed_messages
