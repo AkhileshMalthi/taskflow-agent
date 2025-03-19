@@ -5,6 +5,8 @@ import streamlit as st
 
 # Configure environment to avoid dependency issues
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+# Disable ChromaDB in CrewAI
+os.environ["CREWAI_MEMORY_ENABLE"] = "false"
 
 # Now import crewai components
 from crewai import Crew
