@@ -47,3 +47,38 @@ class SlackMessageProcessor:
             raise ValueError(f"Error formatting messages: {str(e)}")
                 
         return formatted_messages
+
+    def parse_messages_from_content(self, file_content):
+        """
+        Parse messages directly from file content string.
+        
+        Args:
+            file_content: String containing the JSON content of the file
+            
+        Returns:
+            List of processed messages
+        """
+        try:
+            # Parse the JSON content
+            messages_data = json.loads(file_content)
+            
+            # Process the messages
+            processed_messages = []
+            for msg in messages_data:
+                if isinstance(msg, dict) and 'text' in msg and 'user' in msg:
+                    # Basic validation that this is a message object
+                    username = msg.get('user_profile', {}).get('real_name', 
+                               msg.get('username', f"User_{msg.get('user', 'unknown')}"))
+                    
+                    processed_messages.append({
+                        'username': username,
+                        'message': msg.get('text', ''),
+                        'timestamp': msg.get('ts', ''),
+                        'channel': msg.get('channel', 'uploaded_file')
+                    })
+            
+            return processed_messages
+        except json.JSONDecodeError:
+            raise ValueError("The uploaded file is not a valid JSON file")
+        except Exception as e:
+            raise Exception(f"Error processing file content: {str(e)}")

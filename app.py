@@ -188,9 +188,38 @@ def main():
     # Sidebar for settings
     st.sidebar.header("Settings")
     
-    # Dynamically load available channels from data directory
-    available_channels = get_available_channels()
-    channel = st.sidebar.selectbox("Select Channel", available_channels)
+    # Add data source selection
+    data_source = st.sidebar.radio("Data Source", ["Predefined Channels", "Upload File"])
+    
+    # Initialize message storage
+    messages = []
+    
+    if data_source == "Predefined Channels":
+        # Dynamically load available channels from data directory
+        available_channels = get_available_channels()
+        channel = st.sidebar.selectbox("Select Channel", available_channels)
+        
+        # Load messages from selected channel
+        try:
+            slack_processor = SlackMessageProcessor()
+            messages = slack_processor.load_messages_from_file(channel)
+            st.write(f"Found {len(messages)} messages in #{channel}")
+        except Exception as e:
+            st.error(f"Error loading messages: {str(e)}")
+    else:
+        # File upload option
+        uploaded_file = st.sidebar.file_uploader("Upload Slack export file (JSON)", type=["json"])
+        
+        if uploaded_file is not None:
+            try:
+                # Read the file content
+                file_content = uploaded_file.getvalue().decode("utf-8")
+                # Process the file content
+                slack_processor = SlackMessageProcessor()
+                messages = slack_processor.parse_messages_from_content(file_content)
+                st.write(f"Found {len(messages)} messages in uploaded file")
+            except Exception as e:
+                st.error(f"Error processing uploaded file: {str(e)}")
     
     # Advanced options
     with st.sidebar.expander("Advanced Options"):
@@ -206,17 +235,7 @@ def main():
         st.error("Initialization failed. Please check your API keys and configuration.")
         return
     
-    # Load and display messages
-    try:
-        slack_processor = SlackMessageProcessor()
-        messages = slack_processor.load_messages_from_file(channel)
-    except Exception as e:
-        st.error(f"Error loading messages: {str(e)}")
-        return
-    
     if messages:
-        st.write(f"Found {len(messages)} messages in #{channel}")
-        
         # Display messages
         with st.expander("View Messages", expanded=False):
             for msg in messages:
@@ -231,7 +250,7 @@ def main():
         if clear_clicked:
             st.session_state.processed_tasks = None
             st.session_state.raw_result = None
-            st.rerun()  # Use st.rerun() instead of st.experimental_rerun()
+            st.rerun()
         
         if extract_clicked:
             with st.spinner("Processing messages..."):
@@ -270,7 +289,10 @@ def main():
             # Handle export functionality
             handle_export(st.session_state.processed_tasks)
     else:
-        st.warning(f"No messages found in #{channel}. Please select a different channel.")
+        if data_source == "Predefined Channels":
+            st.warning(f"No messages found in the selected channel. Please select a different channel.")
+        else:
+            st.info("Please upload a Slack export file to extract tasks.")
 
 if __name__ == "__main__":
     main()
