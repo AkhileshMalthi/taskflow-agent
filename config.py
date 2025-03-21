@@ -1,14 +1,15 @@
 import os
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, Dict, Any
 
 @dataclass
 class Config:
     """Configuration for TaskFlow Agent."""
     
     # LLM configuration
-    llm_model: str = "groq/mixtral-8x7b-32768"
-    llm_api_key: Optional[str] = None
+    llm_provider: str = "Groq"  # Default LLM provider
+    llm_model: str = "mixtral-8x7b-32768"  # Default model
+    llm_credentials: Dict[str, str] = field(default_factory=dict)
     
     # Task processing configuration
     process_type: str = "sequential"
@@ -31,9 +32,9 @@ class Config:
     @classmethod
     def from_env(cls):
         """Load configuration from environment variables."""
-        return cls(
-            llm_model=os.getenv("LLM_MODEL", "groq/mixtral-8x7b-32768"),
-            llm_api_key=os.getenv("GROQ_API_KEY"),
+        config = cls(
+            llm_provider=os.getenv("LLM_PROVIDER", "Groq"),
+            llm_model=os.getenv("LLM_MODEL", "mixtral-8x7b-32768"),
             slack_api_token=os.getenv("SLACK_API_TOKEN"),
             
             trello_api_key=os.getenv("TRELLO_API_KEY"),
@@ -45,3 +46,10 @@ class Config:
             clickup_list_id=os.getenv("CLICKUP_LIST_ID"),
             clickup_space_id=os.getenv("CLICKUP_SPACE_ID"),
         )
+        
+        # Load LLM credentials from environment variables
+        config.llm_credentials = {
+            "api_key": os.getenv("GROQ_API_KEY"),
+        }
+        
+        return config

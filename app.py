@@ -11,7 +11,6 @@ os.environ["CREWAI_MEMORY_ENABLE"] = "false"
 
 # Now import crewai components
 from crewai import Crew
-from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 
 from config import Config
@@ -23,6 +22,7 @@ from tasks.extraction_task import ExtractionTask
 from tasks.formatting_task import FormattingTask
 from integrations.slack_processor import SlackMessageProcessor
 from utils.config_manager import ConfigManager
+from llm_providers import get_provider, list_available_providers
 
 # Load environment variables
 load_dotenv()
@@ -43,9 +43,13 @@ if 'show_config' not in st.session_state:
     st.session_state.show_config = False
 
 def initialize_llm():
-    """Initialize the language model."""
+    """Initialize the language model using the configured provider."""
     try:
-        return ChatGroq(model=config.llm_model, api_key=config.llm_api_key)
+        # Get the provider instance
+        provider = get_provider(config.llm_provider, config.llm_credentials)
+        
+        # Initialize the LLM with the provider
+        return provider.get_llm(config.llm_model)
     except Exception as e:
         st.error(f"Error initializing LLM: {str(e)}")
         raise
@@ -246,16 +250,56 @@ def show_configuration_menu():
     
     with tab1:
         st.subheader("LLM Service")
-        groq_api_key = st.text_input("Groq API Key", 
-                                     value=config.llm_api_key or "",
-                                     type="password",
-                                     help="API key for Groq LLM service")
         
-        llm_model = st.selectbox("LLM Model", 
-                                ["groq/mixtral-8x7b-32768", 
-                                 "groq/llama3-70b-8192",
-                                 "groq/gemma-7b-it"], 
-                                index=0)
+        # Get available providers
+        available_providers = list_available_providers()
+        
+        # LLM provider selection
+        llm_provider = st.selectbox(
+            "LLM Provider", 
+            options=available_providers,
+            index=available_providers.index(config.llm_provider) if config.llm_provider in available_providers else 0
+        )
+        
+        # Get credential fields based on selected provider
+        try:
+            provider_class = next(
+                p for p in [get_provider(p, {"api_key": "dummy"}) for p in available_providers] 
+                if p.get_provider_name() == llm_provider
+            ).__class__
+            credential_fields = provider_class.get_required_credentials()
+        except:
+            credential_fields = ["api_key"]
+        
+        # Display credential inputs
+        credentials = {}
+        for field in credential_fields:
+            field_value = config.llm_credentials.get(field, "")
+            credentials[field] = st.text_input(
+                f"{field.replace('_', ' ').title()}", 
+                value=field_value,
+                type="password" if "key" in field or "token" in field else "default"
+            )
+        
+        # LLM model selection - dynamically load models from the selected provider
+        try:
+            # Create temporary provider to get models
+            temp_provider = get_provider(llm_provider, {field: "dummy" for field in credential_fields})
+            available_models = temp_provider.list_models()
+            
+            # Display model dropdown
+            llm_model = st.selectbox(
+                "Model", 
+                options=available_models,
+                index=available_models.index(config.llm_model) if config.llm_model in available_models else 0
+            )
+        except:
+            # Fallback to default models if provider loading fails
+            llm_model = st.selectbox(
+                "Model", 
+                options=["mixtral-8x7b-32768", "llama3-70b-8192", "gemma-7b-it"],
+                index=0
+            )
     
     with tab2:
         st.subheader("Trello")
@@ -284,8 +328,10 @@ def show_configuration_menu():
     if st.sidebar.button("Save Configuration"):
         # Create a dictionary with all the configuration values
         new_config = {
-            "GROQ_API_KEY": groq_api_key,
+            "LLM_PROVIDER": llm_provider,
             "LLM_MODEL": llm_model,
+            # Add credential environment variables with proper prefixes
+            **{f"{llm_provider.upper()}_API_KEY": credentials.get("api_key", "")},
             "TRELLO_API_KEY": trello_api_key,
             "TRELLO_API_TOKEN": trello_token,
             "TRELLO_BOARD_ID": trello_board_id,
@@ -301,8 +347,9 @@ def show_configuration_menu():
             # Update the session state
             st.session_state.config_initialized = True
             # Update the config variable
-            config.llm_api_key = groq_api_key
+            config.llm_provider = llm_provider
             config.llm_model = llm_model
+            config.llm_credentials = credentials
             config.trello_api_key = trello_api_key
             config.trello_api_token = trello_token
             config.trello_board_id = trello_board_id

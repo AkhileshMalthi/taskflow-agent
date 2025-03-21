@@ -53,9 +53,10 @@ class ConfigManager:
         load_dotenv(self.env_file)
         
         # Return all relevant environment variables
-        return {
+        config = {
+            "LLM_PROVIDER": os.getenv("LLM_PROVIDER", "Groq"),
+            "LLM_MODEL": os.getenv("LLM_MODEL", "mixtral-8x7b-32768"),
             "GROQ_API_KEY": os.getenv("GROQ_API_KEY", ""),
-            "LLM_MODEL": os.getenv("LLM_MODEL", "groq/mixtral-8x7b-32768"),
             "TRELLO_API_KEY": os.getenv("TRELLO_API_KEY", ""),
             "TRELLO_API_TOKEN": os.getenv("TRELLO_API_TOKEN", ""),
             "TRELLO_BOARD_ID": os.getenv("TRELLO_BOARD_ID", ""),
@@ -64,6 +65,13 @@ class ConfigManager:
             "CLICKUP_LIST_ID": os.getenv("CLICKUP_LIST_ID", ""),
             "CLICKUP_SPACE_ID": os.getenv("CLICKUP_SPACE_ID", "")
         }
+        
+        # Add other LLM provider keys if they exist
+        for key in os.environ:
+            if key.endswith("_API_KEY") and key not in config:
+                config[key] = os.getenv(key, "")
+                
+        return config
     
     def get_config_value(self, key: str, default: Optional[str] = None) -> Optional[str]:
         """
