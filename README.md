@@ -1,116 +1,61 @@
-# TaskFlow Agent
+# Taskflow Agent (Event-Driven, RabbitMQ Edition)
 
-TaskFlow Agent is an AI-powered tool that automatically extracts and manages tasks from conversations. It analyzes Slack conversations, identifies task-related messages, and can export them to popular task management platforms like Trello and ClickUp.
+## Vision
+A scalable service that automatically creates actionable tasks from real-time conversations, using an event-driven architecture. The system ingests messages, uses AI to extract tasks, and exports them to the user's desired platform (Trello, ClickUp, etc.).
 
-## Features
+---
 
-- **Automatic Task Extraction**: Identifies task assignments, deadlines, and responsibilities in conversations
-- **Intelligent Parsing**: Extracts key task details including title, description, assignee, due date, and priority
-- **Multiple Integrations**:
-  - **Slack**: Processes messages from Slack exported conversation data (JSON format)
-  - **Trello**: Exports tasks as cards with appropriate labels and details
-  - **ClickUp**: Creates tasks with priorities, descriptions, and deadlines
-- **Flexible Export Options**: Save tasks as JSON or send directly to task management platforms
-- **Interactive UI**: Built with Streamlit for easy configuration and visualization
-- **File Management**: Save and reload conversation files for future analysis
+## Architecture Overview
 
-## Quick Start
+- **Ingestor Service**: Collects and normalizes messages from various sources (e.g., Slack, Teams).
+- **AI Task Extractor Service**: Subscribes to message events, extracts tasks using AI, and emits task events.
+- **Task Platform Manager Service**: Subscribes to task events and creates tasks in the user's chosen platform.
+- **Event Bus**: RabbitMQ is used for all inter-service communication.
 
-1. **Setup Environment**:
-   ```bash
-   # Clone the repository
-   git clone https://github.com/yourusername/taskflow-agent.git
-   cd taskflow-agent
-   
-   # Create and activate virtual environment
-   python -m venv .agentenv
-   source .agentenv/bin/activate  # On Windows: .agentenv\Scripts\activate
-   
-   # Install dependencies
-   pip install -r requirements.txt
-   ```
+---
 
-2. **Configure API Keys**:
-   Create a `.env` file with your API keys:
-   ```
-   GROQ_API_KEY=your_groq_api_key
-   LLM_MODEL=groq/mixtral-8x7b-32768
-   TRELLO_API_KEY=your_trello_api_key
-   TRELLO_API_TOKEN=your_trello_token
-   TRELLO_BOARD_ID=your_trello_board_id
-   TRELLO_LIST_ID=your_trello_list_id
-   CLICKUP_API_TOKEN=your_clickup_token
-   CLICKUP_LIST_ID=your_clickup_list_id
-   CLICKUP_SPACE_ID=your_clickup_space_id
-   ```
+## Event Flow
 
-   Alternatively, you can configure these through the UI after launching the application.
+1. **Ingestor** publishes `conversation.message_received` events.
+2. **AI Task Extractor** subscribes to `conversation.message_received`, extracts tasks, and publishes `task.extracted` events.
+3. **Task Platform Manager** subscribes to `task.extracted`, creates tasks in the platform, and publishes `task.created` or `task.failed` events.
 
-3. **Run the Application**:
-   ```bash
-   streamlit run app.py
-   ```
+---
 
-## How It Works
+## Next Steps
 
-TaskFlow Agent uses a series of AI agents powered by CrewAI, each specializing in a specific part of the task extraction process:
+1. **Set up project structure**
+    - `ingestor/` (service)
+    - `extractor/` (service)
+    - `platform_manager/` (service)
+    - `utils/` (shared code, e.g., messaging)
+    - `config/` (settings, .env)
+2. **Add RabbitMQ dependency** (`pika`)
+3. **Implement messaging utility** for publish/subscribe
+4. **Implement Ingestor Service** (publishes messages)
+5. **Implement AI Task Extractor Service** (subscribes to messages, publishes tasks)
+6. **Implement Task Platform Manager Service** (subscribes to tasks, creates tasks in platform)
+7. **Add event schemas and documentation**
+8. **Add logging and error handling**
+9. **Write integration tests**
+10. **Document everything in README**
 
-1. **Filtering Agent**: Identifies which messages contain task-related information
-2. **Extraction Agent**: Extracts structured task data from the filtered messages
-3. **Formatting Agent**: Formats the extracted tasks into a standardized JSON structure
-
-These agents work in sequence, passing information to each other through a process orchestrated by CrewAI.
-
-## User Interface
-
-The Streamlit-based UI provides:
-- File upload for Slack conversation JSON files
-- Saved file management (save, load, delete)
-- Configuration interface for API credentials
-- Task extraction and visualization
-- Export options to different platforms
-
-## Data Format
-
-Tasks are extracted in the following format:
-
-```json
-{
-  "title": "Task title",
-  "description": "Detailed description",
-  "assignee": "Person responsible",
-  "dueDate": "2023-04-01T12:00:00.000Z",
-  "priority": "High",
-  "status": "To Do",
-  "createdAt": "2023-03-28T15:30:45.123Z",
-  "taskId": "unique-task-id"
-}
-```
-
-## Project Structure
-
-- `agents/`: Agent definitions for each specialized task
-- `tasks/`: Task definitions that provide instructions to the agents
-- `integrations/`: Integration code for Slack, Trello, and ClickUp
-- `prompts/`: Templates for agent instructions
-- `utils/`: Utility functions including configuration management
-- `data/`: Directory for saved conversation files
-- `app.py`: Main Streamlit application
-- `config.py`: Configuration class for environment variables
+---
 
 ## Requirements
+- Python 3.9+
+- RabbitMQ (local or cloud instance)
+- `pika` Python package
 
-- Python 3.11+
-- CrewAI
-- LangChain
-- Groq API Access
-- Streamlit
-- Requests (for API integrations)
+---
 
-## Contributing
+## Getting Started
+1. Clone the repo
+2. Set up RabbitMQ
+3. Install dependencies: `pip install -r requirements.txt`
+4. Run each service in a separate terminal
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
 
 ## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT
