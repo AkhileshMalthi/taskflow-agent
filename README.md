@@ -1,3 +1,5 @@
+
+
 # Taskflow Agent (Event-Driven MVP)
 
 A scalable, event-driven service that automatically creates actionable tasks from real-time conversations using RabbitMQ and AI-powered task extraction.
@@ -27,6 +29,20 @@ A scalable, event-driven service that automatically creates actionable tasks fro
 1. **Ingestor** publishes `conversation.message_received` events
 2. **AI Extractor** subscribes to messages, extracts tasks, publishes `task.extracted`  
 3. **Platform Manager** subscribes to tasks, creates them, publishes `task.created/failed`
+
+---
+
+## Service Architecture
+
+Below are the architecture diagrams for the Taskflow Agent services:
+
+### Services Design
+
+![Services Design](assets/services-design.svg)
+
+### AI Service
+
+![AI Service](assets/AI-service.svg)
 
 ---
 
