@@ -1,6 +1,6 @@
 
 
-# Taskflow Agent (Event-Driven MVP)
+# Taskflow Agent 2.0 (Event-Driven MVP)
 
 A scalable, event-driven service that automatically creates actionable tasks from real-time conversations using RabbitMQ and AI-powered task extraction.
 
