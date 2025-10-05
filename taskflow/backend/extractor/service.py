@@ -3,19 +3,17 @@ AI Task Extractor Service - Subscribes to messages and extracts tasks.
 For MVP, uses simple rule-based extraction. Can be enhanced with LLM integration later.
 """
 
-import logging
-import uuid
+from taskflow.backend.config.logger import setup_logging, get_logger
 from typing import List
 
 from taskflow.backend.config.settings import config
 from taskflow.backend.utils.messaging import MessageBroker, setup_taskflow_infrastructure
-from taskflow.models.extractor import LLMResponse, RawTask, Task
+from taskflow.models.extractor import LLMResponse, Task
 from taskflow.shared.events import MessageReceived, TaskExtracted
 from taskflow.backend.utils.prompts import build_extraction_prompt_with_few_shots
 from taskflow.backend.utils.llms import get_llm
-import json
 
-logger = logging.getLogger(__name__)
+logger = get_logger("taskflow.backend.extractor")
 
 
 class TaskExtractor:
@@ -136,10 +134,8 @@ def create_extractor_service() -> ExtractorService:
 
 def run_extractor_service():
     """Run the extractor service."""
-    logging.basicConfig(level=getattr(logging, config.log_level))
-    
+    setup_logging()
     service = create_extractor_service()
-    
     try:
         service.start_consuming()
     except KeyboardInterrupt:

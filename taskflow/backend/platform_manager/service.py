@@ -3,7 +3,7 @@ Platform Manager Service - Subscribes to extracted tasks and manages task creati
 For MVP, simulates task creation by logging to console and storing in memory.
 """
 
-import logging
+from taskflow.backend.config.logger import setup_logging, get_logger
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -13,7 +13,7 @@ from taskflow.backend.config.settings import config
 from taskflow.backend.utils.messaging import MessageBroker, setup_taskflow_infrastructure
 from taskflow.shared.events import TaskExtracted, TaskCreated, TaskFailed
 
-logger = logging.getLogger(__name__)
+logger = get_logger("taskflow.backend.platform_manager")
 
 
 class MockPlatform:
@@ -231,10 +231,8 @@ def create_platform_manager_service() -> PlatformManagerService:
 
 def run_platform_manager_service():
     """Run the platform manager service."""
-    logging.basicConfig(level=getattr(logging, config.log_level))
-    
+    setup_logging()
     service = create_platform_manager_service()
-    
     try:
         service.start_consuming()
     except KeyboardInterrupt:

@@ -3,7 +3,7 @@ Ingestor Service - Accepts messages and publishes conversation.message_received 
 For MVP, this provides a simple interface to submit messages manually.
 """
 
-import logging
+from taskflow.backend.config.logger import setup_logging, get_logger
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -12,7 +12,7 @@ from taskflow.backend.config.settings import config
 from taskflow.backend.utils.messaging import MessageBroker, setup_taskflow_infrastructure
 from taskflow.shared.events import MessageReceived
 
-logger = logging.getLogger(__name__)
+logger = get_logger("taskflow.backend.ingestor")
 
 
 class IngestorService:
@@ -128,27 +128,20 @@ def run_ingestor_cli():
     Run the ingestor service in CLI mode for testing.
     Allows manual message input for demonstration purposes.
     """
-    logging.basicConfig(level=getattr(logging, config.log_level))
-    
+    setup_logging()
     print("🚀 Starting Taskflow Ingestor Service (CLI Mode)")
     print("Type messages to ingest them. Type 'quit' to exit.\n")
-    
     service = create_ingestor_service()
-    
     try:
         while True:
             # Get user input
             content = input("Message content: ").strip()
-            
             if content.lower() == 'quit':
                 break
-                
             if not content:
                 continue
-            
             author = input("Author (default: user): ").strip() or "user"
             channel = input("Channel (optional): ").strip() or None
-            
             try:
                 message_id = service.ingest_message(
                     content=content,
@@ -156,15 +149,11 @@ def run_ingestor_cli():
                     source="cli",
                     channel=channel
                 )
-                
                 print(f"✅ Ingested message: {message_id}\n")
-                
             except Exception as e:
                 print(f"❌ Error ingesting message: {e}\n")
-    
     except KeyboardInterrupt:
         print("\n👋 Shutting down ingestor service...")
-    
     finally:
         service.broker.disconnect()
 
