@@ -5,8 +5,10 @@ description = "Event-driven task extraction and management service using RabbitM
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "langchain>=0.3.27",
+    "langchain-groq>=0.3.8",
     "pika>=1.3.2",
-    "streamlit>=1.28.0"
+    "streamlit>=1.28.0",
 ]
 
 [dependency-groups]

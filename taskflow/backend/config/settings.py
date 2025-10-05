@@ -17,11 +17,17 @@ class RabbitMQConfig:
     password: Optional[str] = None
     exchange_name: str = "taskflow"
 
+@dataclass
+class LLMConfig:
+    """Configuration for Language Model."""
+    model_provider: str = "groq"
+    model_name: str = "llama-3.3-70b-versatile"
 
 @dataclass
 class AppConfig:
     """Main application configuration."""
     rabbitmq: RabbitMQConfig
+    llm: LLMConfig
     log_level: str = "INFO"
     service_name: str = "taskflow"
 
@@ -40,9 +46,15 @@ def load_config() -> AppConfig:
         password=os.getenv("RABBITMQ_PASSWORD"),
         exchange_name=os.getenv("RABBITMQ_EXCHANGE", "taskflow")
     )
-    
+
+    llm_config = LLMConfig(
+        model_provider=os.getenv("TASKFLOW_MODEL_PROVIDER", "groq"),
+        model_name=os.getenv("TASKFLOW_MODEL_NAME", "llama-3.3-70b-versatile")
+    )
+
     return AppConfig(
         rabbitmq=rabbitmq_config,
+        llm=llm_config,
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         service_name=os.getenv("SERVICE_NAME", "taskflow")
     )
