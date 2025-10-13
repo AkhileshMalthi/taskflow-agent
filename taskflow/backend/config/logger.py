@@ -1,4 +1,3 @@
-# TODO: Implement logging configuration
 import logging
 import logging.config
 import os
