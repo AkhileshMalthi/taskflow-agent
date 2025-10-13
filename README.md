@@ -9,7 +9,7 @@ A scalable, event-driven service that automatically creates actionable tasks fro
 ## 🎯 MVP Features
 
 - **📝 Message Ingestion**: Submit conversation messages through CLI or web UI
-- **🤖 AI Task Extraction**: Rule-based task extraction (expandable to LLM)
+- **🤖 AI Task Extraction**: LLM-powered task extraction (Groq/OpenAI/Anthropic/Google)
 - **🏗️ Task Management**: Simulated task creation in various platforms
 - **⚡ Event-Driven**: RabbitMQ-based microservices architecture
 - **🌐 Web Interface**: Streamlit frontend for easy interaction
@@ -22,7 +22,7 @@ A scalable, event-driven service that automatically creates actionable tasks fro
 [Ingestor Service] ---(RabbitMQ)---> [AI Task Extractor] ---(RabbitMQ)---> [Platform Manager]
         |                                     |                                    |
    Message Input                        Task Extraction                    Task Creation
-   (CLI/Web UI)                        (Rule-based AI)                  (Console/Mock)
+    (CLI/Web UI)                        (LLM-powered AI)                 (Console/Mock)
 ```
 
 **Event Flow:**
@@ -157,9 +157,9 @@ LOG_LEVEL=INFO
 ## 📊 What's Included
 
 ### ✅ Backend Services
-- **Ingestor**: Message ingestion with RabbitMQ publishing
-- **AI Extractor**: Rule-based task extraction from messages
-- **Platform Manager**: Mock task creation with console output
+- **Ingestor**: Message ingestion with RabbitMQ publishing (manual/CLI/web UI only)
+- **AI Extractor**: LLM-powered task extraction from messages (Groq/OpenAI/Anthropic/Google)
+- **Platform Manager**: Simulated (mock) task creation; no real platform integrations yet
 - **Messaging**: RabbitMQ utilities with event schemas
 
 ### ✅ Frontend
@@ -170,18 +170,20 @@ LOG_LEVEL=INFO
 - **Event Schemas**: Structured event definitions
 - **Configuration**: Environment-based settings
 - **Service Orchestration**: Run individual or all services
+- **Persistence**: In-memory only (no database yet)
+> **Note:** Test coverage is minimal (one unit test). Contributions for more tests are welcome!
 
 ---
 
 ## 🔮 Next Steps (Beyond MVP)
 
-- **LLM Integration**: Replace rule-based extraction with GPT/Claude
-- **Real Platforms**: Integrate with Trello, ClickUp, Jira APIs
-- **Live Sources**: Slack/Teams webhooks for real-time ingestion
+- **Advanced LLM Features**: Add prompt engineering, few-shot learning, and support for more providers
+- **Real Platforms**: Integrate with Trello, ClickUp, Jira APIs (replace mock integration)
+- **Live Sources**: Slack/Teams webhooks for real-time ingestion (currently manual/CLI/web UI only)
 - **Advanced UI**: React frontend with real-time WebSocket updates
-- **Persistence**: Database storage for tasks and audit trails
+- **Persistence**: Add database storage for tasks and audit trails (currently in-memory)
 - **Authentication**: User management and multi-tenancy
-- **Monitoring**: Observability, metrics, and alerting
+- **Monitoring & Logging**: Improve observability, metrics, and logging configuration
 
 ---
 
