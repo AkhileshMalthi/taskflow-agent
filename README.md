@@ -56,17 +56,33 @@ Below are the architecture diagrams for the Taskflow Agent services:
 
 1. **Clone and setup:**
 ```bash
-git clone <repository>
+git clone https://github.com/AkhileshMalthi/taskflow-agent.git
 cd taskflow-agent
 ```
 
 2. **Install dependencies:**
 ```bash
+# Using uv (recommended - faster)
 uv sync
-# or: pip install -e .
+
+# Or using pip with editable install
+pip install -e .
+
+# Or install from source
+pip install .
 ```
 
-3. **Start RabbitMQ:**
+> **Note for Developers:** Use `pip install -e .` or `uv pip install -e .` for editable installation during development. This allows you to make changes to the code without reinstalling.
+
+3. **Configure environment (optional):**
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env with your settings (RabbitMQ, Database, LLM API keys, etc.)
+```
+
+4. **Start RabbitMQ:**
 ```bash
 # Using Docker (recommended)
 # latest RabbitMQ 4.x
@@ -75,7 +91,7 @@ docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4-manag
 # Or install locally: https://www.rabbitmq.com/download.html
 ```
 
-4. **Run the application:**
+5. **Run the application:**
 ```bash
 # Option 1: Run all services (recommended for demo)
 python run_service.py all
@@ -139,14 +155,31 @@ LOG_LEVEL=INFO
 
 ---
 
-## 🧪 Testing the MVP
+## 🧪 Testing
 
-### Method 1: Web Interface (Easiest)
+### Running Unit Tests
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest tests/unit/extractor/test_task_extractor.py
+
+# Run with verbose output
+pytest -v
+
+# Run with coverage
+pytest --cov=taskflow --cov-report=html
+```
+
+### Testing the Application
+
+#### Method 1: Web Interface (Easiest)
 1. Run: `python run_service.py all`
 2. Open: http://localhost:8501
 3. Submit test messages and watch tasks appear
 
-### Method 2: CLI Services
+#### Method 2: CLI Services
 1. **Terminal 1**: `python run_service.py extractor`
 2. **Terminal 2**: `python run_service.py platform_manager`  
 3. **Terminal 3**: `python run_service.py ingestor`
