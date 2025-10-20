@@ -1,0 +1,154 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskflow-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: taskflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - taskflow-network
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: taskflow-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - taskflow-network
+
+  # Message Ingestor Service
+  ingestor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskflow-ingestor
+    command: python run_service.py ingestor
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_EXCHANGE: taskflow
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/taskflow
+      LOG_LEVEL: INFO
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+    restart: unless-stopped
+
+  # AI Task Extractor Service
+  extractor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskflow-extractor
+    command: python run_service.py extractor
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_EXCHANGE: taskflow
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/taskflow
+      LOG_LEVEL: INFO
+      # Add your LLM API keys here or use .env file
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+    restart: unless-stopped
+
+  # Platform Manager Service
+  platform_manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskflow-platform-manager
+    command: python run_service.py platform_manager
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_EXCHANGE: taskflow
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/taskflow
+      LOG_LEVEL: INFO
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+    restart: unless-stopped
+
+  # Streamlit Web Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskflow-frontend
+    command: python run_service.py frontend
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_EXCHANGE: taskflow
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/taskflow
+      LOG_LEVEL: INFO
+    ports:
+      - "8501:8501"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+
+networks:
+  taskflow-network:
+    driver: bridge

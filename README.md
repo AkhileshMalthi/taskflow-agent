@@ -52,11 +52,50 @@ Below are the architecture diagrams for the Taskflow Agent services:
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Option 1: Docker Compose (Recommended)
+
+The easiest way to run the entire stack with all dependencies:
+
+```bash
+# Clone the repository
+git clone https://github.com/AkhileshMalthi/taskflow-agent.git
+cd taskflow-agent
+
+# Copy and configure environment file
+cp .env.docker .env
+# Edit .env and add your LLM API key (GROQ_API_KEY, OPENAI_API_KEY, etc.)
+
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Access the web interface
+# Open http://localhost:8501 in your browser
+
+# Stop all services
+docker-compose down
+```
+
+**What's included:**
+- ✅ PostgreSQL database
+- ✅ RabbitMQ message broker with management UI (http://localhost:15672)
+- ✅ All three backend services (ingestor, extractor, platform_manager)
+- ✅ Streamlit web frontend
+
+---
+
+### Option 2: Local Installation
+
+For development or if you prefer running services locally:
+
+#### Prerequisites
 - Python 3.11+
 - RabbitMQ (local or cloud instance)
+- PostgreSQL (optional, for persistence)
 
-### Installation
+#### Installation
 
 1. **Clone and setup:**
 ```bash
@@ -191,7 +230,47 @@ pytest --cov=taskflow --cov-report=html
 
 ---
 
-## 📊 What's Included
+## � Docker Management
+
+### Useful Docker Commands
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs for all services
+docker-compose logs -f
+
+# View logs for a specific service
+docker-compose logs -f extractor
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (clean slate)
+docker-compose down -v
+
+# Rebuild containers after code changes
+docker-compose up -d --build
+
+# Scale a service (run multiple instances)
+docker-compose up -d --scale extractor=3
+
+# Check service status
+docker-compose ps
+
+# Execute commands in a running container
+docker-compose exec extractor bash
+```
+
+### Access Points
+- **Web UI**: http://localhost:8501
+- **RabbitMQ Management**: http://localhost:15672 (guest/guest)
+- **PostgreSQL**: localhost:5432 (postgres/postgres)
+
+---
+
+## �📊 What's Included
 
 ### ✅ Backend Services
 - **Ingestor**: Message ingestion with RabbitMQ publishing (manual/CLI/web UI only)
@@ -207,8 +286,8 @@ pytest --cov=taskflow --cov-report=html
 - **Event Schemas**: Structured event definitions
 - **Configuration**: Environment-based settings
 - **Service Orchestration**: Run individual or all services
-- **Persistence**: In-memory only (no database yet)
-> **Note:** Test coverage is minimal (one unit test). Contributions for more tests are welcome!
+- **Persistence**: PostgreSQL database with SQLAlchemy ORM
+- **Containerization**: Docker and Docker Compose for easy deployment
 
 ---
 
