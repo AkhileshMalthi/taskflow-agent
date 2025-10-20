@@ -2,6 +2,10 @@
 
 # Taskflow Agent 2.0 (Event-Driven MVP)
 
+[![CI](https://github.com/AkhileshMalthi/taskflow-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/AkhileshMalthi/taskflow-agent/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+
 A scalable, event-driven service that automatically creates actionable tasks from real-time conversations using RabbitMQ and AI-powered task extraction.
 
 ---
